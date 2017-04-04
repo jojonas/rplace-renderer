@@ -48,15 +48,15 @@ class Place:
             self.state[y][x] = color
             self.step += 1
 
-        #print("Read %d steps until T = %d sec." % (N, timestamp-self.t0))
+            # print("Read %d steps until T = %d sec." % (N, timestamp-self.t0))
 
     def plot(self):
         plt.imshow(self.state, cmap=self.cmap)
         plt.axis("off")
         plt.gca().get_xaxis().set_visible(False)
         plt.gca().get_yaxis().set_visible(False)
-        plt.xlim(0,self.width)
-        plt.ylim(self.height,0)
+        plt.xlim(0, self.width)
+        plt.ylim(self.height, 0)
 
     def total_steps(self):
         stat = os.stat(self.filename)
@@ -74,12 +74,13 @@ def render_timeline(filename="diffs.bin", batch=100e3):
 
     total = place.total_steps()
     for i in range(0, total, int(batch)):
-        print("Progress: %d / %d" % (i,total))
+        print("Progress: %d / %d" % (i, total))
         place.run(batch)
         place.plot()
-        plt.savefig("place_%05dk.png" % (int(i/1000)), bbox_inches="tight", pad_inches=0)
+        plt.savefig("place_%05dk.png" % (int(i / 1000)), bbox_inches="tight", pad_inches=0)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser("/r/place renderer")
     parser.add_argument("filename")
     parser.add_argument("--batch-size", type=int, default=100e3)
