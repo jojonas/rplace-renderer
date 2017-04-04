@@ -5,7 +5,7 @@ import struct
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
+from PIL import Image
 
 class Place:
     width = 1000
@@ -51,12 +51,16 @@ class Place:
             # print("Read %d steps until T = %d sec." % (N, timestamp-self.t0))
 
     def plot(self):
+        """ Plot using matplotlib. Call plt.show() to show. """
         plt.imshow(self.state, cmap=self.cmap)
-        plt.axis("off")
-        plt.gca().get_xaxis().set_visible(False)
-        plt.gca().get_yaxis().set_visible(False)
         plt.xlim(0, self.width)
         plt.ylim(self.height, 0)
+
+    def image(self):
+        """ Generate PIL-Image from current state. """
+        colored_data = self.cmap(self.state)
+        image = Image.fromarray(np.uint8(colored_data*255))
+        return image
 
     def total_steps(self):
         stat = os.stat(self.filename)
@@ -69,36 +73,26 @@ class Place:
         self.file = None
 
 
-def render_timeline(filename="diffs.bin", batch=100e3, out=".", consecutive=False):
+def render_timeline(filename="diffs.bin", batch=100e3, out="."):
     if not os.path.exists(out):
         os.makedirs(out)
 
     place = Place(filename)
     total = place.total_steps()
 
-    j = 0
-    for i in range(0, total, int(batch)):
-        print("Progress: %d / %d = %.1f %%" % (i, total, 100.*i/total))
+    for i in range(0, int(total/batch)):
+        print("Progress: %d / %d = %.1f %%" % (i*batch, total, 100.*i*batch/total))
+
         place.run(batch)
-        place.plot()
+        image = place.image()
 
-        if consecutive:
-            # Consecutive numbering, useful e.g. for ffmpeg
-            plot_filename = "place_%03d.png" % j
-        else:
-            # Numbering by step, useful when adding new renderings later
-            plot_filename = "place_%05dk.png" % int(i / 1000)
-
-        plt.savefig(os.path.join(out, plot_filename), bbox_inches="tight", pad_inches=0)
-
-        j += 1
+        image.save(os.path.join(out, "place_%03d.png" % i))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("/r/place renderer")
     parser.add_argument("filename")
     parser.add_argument("--batch-size", type=int, default=100e3)
     parser.add_argument("--outdir", default=".")
-    parser.add_argument("--consecutive", action="store_true")
     args = parser.parse_args()
 
-    render_timeline(args.filename, batch=args.batch_size, out=args.outdir, consecutive=args.consecutive)
+    render_timeline(args.filename, batch=args.batch_size, out=args.outdir)
