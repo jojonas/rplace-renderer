@@ -37,7 +37,7 @@ class Place:
         self.t0 = 0
 
     def run(self, N=1):
-        for i in range(N):
+        for i in range(int(N)):
             buffer = self.file.read(self.format.size)
             if len(buffer) < self.format.size:
                 break
@@ -74,7 +74,7 @@ def render_timeline(filename="diffs.bin", batch=100e3):
 
     total = place.total_steps()
     for i in range(0, total, int(batch)):
-        print("Progress: %d / %d" % (i, total))
+        print("Progress: %d / %d = %.1f %%" % (i, total, 100.*i/total))
         place.run(batch)
         place.plot()
         plt.savefig("place_%05dk.png" % (int(i / 1000)), bbox_inches="tight", pad_inches=0)
