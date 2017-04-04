@@ -1,5 +1,5 @@
 import argparse
-import os
+import os, os.path
 import struct
 
 import numpy as np
@@ -69,21 +69,36 @@ class Place:
         self.file = None
 
 
-def render_timeline(filename="diffs.bin", batch=100e3):
-    place = Place(filename)
+def render_timeline(filename="diffs.bin", batch=100e3, out=".", consecutive=False):
+    if not os.path.exists(out):
+        os.makedirs(out)
 
+    place = Place(filename)
     total = place.total_steps()
+
+    j = 0
     for i in range(0, total, int(batch)):
         print("Progress: %d / %d = %.1f %%" % (i, total, 100.*i/total))
         place.run(batch)
         place.plot()
-        plt.savefig("place_%05dk.png" % (int(i / 1000)), bbox_inches="tight", pad_inches=0)
 
+        if consecutive:
+            # Consecutive numbering, useful e.g. for ffmpeg
+            plot_filename = "place_%03d.png" % j
+        else:
+            # Numbering by step, useful when adding new renderings later
+            plot_filename = "place_%05dk.png" % int(i / 1000)
+
+        plt.savefig(os.path.join(out, plot_filename), bbox_inches="tight", pad_inches=0)
+
+        j += 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("/r/place renderer")
     parser.add_argument("filename")
     parser.add_argument("--batch-size", type=int, default=100e3)
+    parser.add_argument("--outdir", default=".")
+    parser.add_argument("--consecutive", action="store_true")
     args = parser.parse_args()
 
-    render_timeline(args.filename, batch=args.batch_size)
+    render_timeline(args.filename, batch=args.batch_size, out=args.outdir, consecutive=args.consecutive)
